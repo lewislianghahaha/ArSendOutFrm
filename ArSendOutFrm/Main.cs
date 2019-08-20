@@ -12,6 +12,7 @@ namespace ArSendOutFrm
     {
         TaskLogic task = new TaskLogic();
         Load load = new Load();
+        ShowDetailFrm showDetail=new ShowDetailFrm();
 
         //保存查询出来的GridView记录
         private DataTable _dtl;
@@ -77,6 +78,8 @@ namespace ArSendOutFrm
                     gvdtl.DataSource = task.ResultTable;
                     panel2.Visible = false;
                 }
+                //控制GridView单元格显示方式
+                ControlGridViewisShow();
             }
             catch (Exception ex)
             {
@@ -95,7 +98,11 @@ namespace ArSendOutFrm
             {
                 if(gvdtl.Rows.Count==0) throw new Exception("没有记录,不能显示明细页");
 
-                
+                showDetail.Fid = Convert.ToInt32(gvdtl.Rows[gvdtl.CurrentCell.RowIndex].Cells[0].Value);
+                //初始化客体信息
+                showDetail.OnInitialize();
+                showDetail.StartPosition = FormStartPosition.CenterParent;
+                showDetail.ShowDialog();
             }
             catch (Exception ex)
             {
@@ -359,6 +366,15 @@ namespace ArSendOutFrm
             {
                 MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        /// <summary>
+        ///  控制GridView单元格显示方式
+        /// </summary>
+        private void ControlGridViewisShow()
+        {
+            //注:当没有值时,若还设置某一行Row不显示的话,就会出现异常
+            gvdtl.Columns[0].Visible = false;
         }
     }
 }

@@ -17,12 +17,33 @@ namespace ArSendOutFrm.Logic
         /// <param name="sdt"></param>
         /// <param name="edt"></param>
         /// <returns></returns>
-        public DataTable Seardt(string orderno, DateTime sdt, DateTime edt)
+        public DataTable Searchdt(string orderno, DateTime sdt, DateTime edt)
         {
             var resultdt=new DataTable();
             try
             {
                 var sqlscript = sqlList.Get_Search(orderno, sdt, edt);
+                var sqlDataAdapter = new SqlDataAdapter(sqlscript, GetConn());
+                sqlDataAdapter.Fill(resultdt);
+            }
+            catch (Exception)
+            {
+                resultdt.Columns.Clear();
+                resultdt.Rows.Clear();
+            }
+            return resultdt;
+        }
+
+        /// <summary>
+        /// 获取明细记录
+        /// </summary>
+        /// <returns></returns>
+        public DataTable Searchdtldt(int fid)
+        {
+            var resultdt = new DataTable();
+            try
+            {
+                var sqlscript = sqlList.Get_ShowDtl(fid);
                 var sqlDataAdapter = new SqlDataAdapter(sqlscript, GetConn());
                 sqlDataAdapter.Fill(resultdt);
             }
