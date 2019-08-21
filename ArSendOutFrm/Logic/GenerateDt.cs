@@ -49,27 +49,71 @@ namespace ArSendOutFrm.Logic
         /// <summary>
         /// 合并DT
         /// </summary>
-        /// <param name="dt"></param>
-        /// <param name="value"></param>
+        /// <param name="dt">GridView当前行记录</param>
+        /// <param name="sourcedt">所有行记录</param>
+        /// <param name="value">‘需方’文本框值</param>
         /// <returns></returns>
-        public DataTable Margedt(DataTable dt, string value)
+        public DataTable Margedt(DataTable dt, DataTable sourcedt,string value)
         {
             try
             {
-                for (var i = 0; i < dt.Rows.Count; i++)
+                //不判断是否有修改,只要在DT内存在就以对应的I行ID为条件进行重新插入
+                for (var i = 0; i < sourcedt.Rows.Count; i++)
                 {
-                    dt.Rows[i].BeginEdit();
-                    dt.Rows[i][1] = value;
-                    dt.Rows[i].EndEdit();
+                    var rows = dt.Select("序号='" + Convert.ToInt32(sourcedt.Rows[i][2]) + "'");
+
+                    if (rows.Length > 0)
+                    {
+                        sourcedt.Rows[i].BeginEdit();
+                        for (var j = 0; j < sourcedt.Columns.Count; j++)
+                        {
+                            sourcedt.Rows[i][j] = j == 1 ? value : rows[0][j];
+                        }
+                        sourcedt.Rows[i].EndEdit();
+                    }
                 }
             }
             catch (Exception)
             {
-                dt.Rows.Clear();
-                dt.Columns.Clear();
+                sourcedt.Rows.Clear();
+                sourcedt.Columns.Clear();
             }
-            return dt;
+            return sourcedt;
         }
 
+        /// <summary>
+        /// 运算-填充DT
+        /// </summary>
+        /// <param name="columnid"></param>
+        /// <param name="value"></param>
+        /// <param name="sourcedt"></param>
+        /// <returns></returns>
+        public DataTable FillDt(int columnid, string value, DataTable sourcedt)
+        {
+            try
+            {
+                //循环对指定列进行填充
+                for (var i = 0; i < sourcedt.Rows.Count; i++)
+                {
+                    for (var j = 0; j < sourcedt.Columns.Count; j++)
+                    {
+                        sourcedt.Rows[i].BeginEdit();
+                        if (j != columnid)continue;
+                        else
+                        {
+                            sourcedt.Rows[i][j] = value;
+                        }
+                        sourcedt.Rows[i].EndEdit();
+                    }
+                }
+
+            }
+            catch (Exception)
+            {
+                sourcedt.Rows.Clear();
+                sourcedt.Columns.Clear();
+            }
+            return sourcedt;
+        }
     }
 }

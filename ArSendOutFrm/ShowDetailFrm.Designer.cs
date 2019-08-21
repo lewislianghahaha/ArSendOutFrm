@@ -57,6 +57,8 @@
             this.tstotalrow = new System.Windows.Forms.ToolStripLabel();
             this.panel3 = new System.Windows.Forms.Panel();
             this.gvdtl = new System.Windows.Forms.DataGridView();
+            this.Rightmenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.tmfill = new System.Windows.Forms.ToolStripMenuItem();
             this.Menu.SuspendLayout();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -64,6 +66,7 @@
             this.bngat.SuspendLayout();
             this.panel3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gvdtl)).BeginInit();
+            this.Rightmenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // Menu
@@ -307,6 +310,7 @@
             this.gvdtl.AllowUserToDeleteRows = false;
             this.gvdtl.AllowUserToOrderColumns = true;
             this.gvdtl.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.gvdtl.ContextMenuStrip = this.Rightmenu;
             this.gvdtl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gvdtl.GridColor = System.Drawing.SystemColors.ActiveCaption;
             this.gvdtl.Location = new System.Drawing.Point(0, 0);
@@ -315,6 +319,19 @@
             this.gvdtl.RowTemplate.Height = 23;
             this.gvdtl.Size = new System.Drawing.Size(949, 477);
             this.gvdtl.TabIndex = 0;
+            // 
+            // Rightmenu
+            // 
+            this.Rightmenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tmfill});
+            this.Rightmenu.Name = "Rightmenu";
+            this.Rightmenu.Size = new System.Drawing.Size(137, 26);
+            // 
+            // tmfill
+            // 
+            this.tmfill.Name = "tmfill";
+            this.tmfill.Size = new System.Drawing.Size(136, 22);
+            this.tmfill.Text = "填充明细行";
             // 
             // ShowDetailFrm
             // 
@@ -339,6 +356,7 @@
             this.bngat.PerformLayout();
             this.panel3.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.gvdtl)).EndInit();
+            this.Rightmenu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -373,5 +391,7 @@
         private System.Windows.Forms.ToolStripLabel tstotalrow;
         private System.Windows.Forms.Panel panel3;
         private System.Windows.Forms.DataGridView gvdtl;
+        private System.Windows.Forms.ContextMenuStrip Rightmenu;
+        private System.Windows.Forms.ToolStripMenuItem tmfill;
     }
 }

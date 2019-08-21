@@ -19,7 +19,7 @@ namespace ArSendOutFrm.DB
             if (orderno == "")
             {
                 _result = $@"
-                            SELECT a.fid,a.FBILLNO 单据编号,a.FDATE 单据日期,b.FNUMBER 客户编码,c.FNAME 客户名称,'KG' 单位,F_YTC_PRINTTIMES 打印次数
+                            SELECT a.fid,a.FBILLNO 单据编号,a.FDATE 单据日期,b.FNUMBER 客户编码,c.FNAME 客户名称,'KG' 单位--,F_YTC_PRINTTIMES 打印次数
                             FROM dbo.T_AR_RECEIVABLE a
                             INNER JOIN dbo.T_BD_CUSTOMER b ON a.FCUSTOMERID=b.FCUSTID
                             INNER JOIN dbo.T_BD_CUSTOMER_L c ON b.FCUSTID=c.FCUSTID
@@ -31,7 +31,7 @@ namespace ArSendOutFrm.DB
             else
             {
                 _result = $@"
-                            SELECT a.fid,a.FBILLNO 单据编号,a.FDATE 单据日期,b.FNUMBER 客户编码,c.FNAME 客户名称,'KG' 单位,F_YTC_PRINTTIMES 打印次数
+                            SELECT a.fid,a.FBILLNO 单据编号,a.FDATE 单据日期,b.FNUMBER 客户编码,c.FNAME 客户名称,'KG' 单位--,F_YTC_PRINTTIMES 打印次数
                             FROM dbo.T_AR_RECEIVABLE a
                             INNER JOIN dbo.T_BD_CUSTOMER b ON a.FCUSTOMERID=b.FCUSTID
                             INNER JOIN dbo.T_BD_CUSTOMER_L c ON b.FCUSTID=c.FCUSTID

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Data;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using ArSendOutFrm.Logic;
+using Mergedt;
 using Stimulsoft.Report;
 
 namespace ArSendOutFrm
@@ -10,6 +12,7 @@ namespace ArSendOutFrm
     public partial class ShowDetailFrm : Form
     {
         TaskLogic task=new TaskLogic();
+        Load load=new Load();
 
         //获取传过来的FID值
         private int _fid;
@@ -19,6 +22,8 @@ namespace ArSendOutFrm
 
         //保存查询出来的GridView记录
         private DataTable _dtl;
+        //保存整理出来的GridView记录
+        private DataTable _dtdtl;
         //记录当前页数(GridView页面跳转使用)
         private int _pageCurrent = 1;
         //记录计算出来的总页数(GridView页面跳转使用)
@@ -27,10 +32,10 @@ namespace ArSendOutFrm
         private bool _pageChange;
 
         #region Set
-        /// <summary>
-        /// 获取传过来的FID值
-        /// </summary>
-        public int Fid { set { _fid = value; } }
+            /// <summary>
+            /// 获取传过来的FID值
+            /// </summary>
+            public int Fid { set { _fid = value; } }
         #endregion
 
         public ShowDetailFrm()
@@ -42,6 +47,7 @@ namespace ArSendOutFrm
         private void OnRegisterEvents()
         {
             tmprint.Click += Tmprint_Click;
+            tmfill.Click += Tmfill_Click;
 
             bnMoveFirstItem.Click += BnMoveFirstItem_Click;
             bnMovePreviousItem.Click += BnMovePreviousItem_Click;
@@ -80,7 +86,7 @@ namespace ArSendOutFrm
             try
             {
                 if(_generatedt.Rows.Count==0) throw new Exception("没有内容,不能进行打印");
-                //将新增数据合并形成为新的DT进行导出(注:先检测行状态,若有"Modified"即将该行更新)
+                //将新增数据合并形成为新的DT进行导出(注:先检测行状态,若有"Modified" 或'Add'即将行更新)
                 _generatedt = Margedt((DataTable) gvdtl.DataSource, _generatedt, txtsale.Text);
 
                 var filepath = Application.StartupPath + $"/Report/SendOutReport.mrt";
@@ -95,6 +101,95 @@ namespace ArSendOutFrm
             {
                 MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        /// <summary>
+        /// 填充明细行
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Tmfill_Click(object sender, EventArgs e)
+        {
+            var colname = string.Empty;
+
+            try
+            {
+                //获取当前选中的项的索引
+                var currentColumnIndex=gvdtl.CurrentCell.ColumnIndex;
+                //异常提示
+                if(currentColumnIndex!=3 && currentColumnIndex !=4 && currentColumnIndex != 5
+                    && currentColumnIndex !=9 && currentColumnIndex !=10 && currentColumnIndex !=11 &&
+                    currentColumnIndex!=12 && currentColumnIndex !=13) throw new Exception("请选择能修改的列进行填充");
+
+                if(Convert.ToString(gvdtl.Rows[gvdtl.CurrentCell.RowIndex].Cells[currentColumnIndex].Value)=="") throw new Exception("请输入值再进行填充");
+
+                switch (currentColumnIndex)
+                {
+                    case 3:
+                        colname = "采购订单号";
+                        break;
+                    case 4:
+                        colname = "物料编码";
+                        break;
+                    case 5:
+                        colname = "物料描述";
+                        break;
+                    case 9:
+                        colname = "采购负责人";
+                        break;
+                    case 10:
+                        colname = "是否有附件物料及清单";
+                        break;
+                    case 11:
+                        colname = "是否有附带检验报告单";
+                        break;
+                    case 12:
+                        colname = "车型";
+                        break;
+                    case 13:
+                        colname = "备注";
+                        break;
+                }
+
+                var clickMessage = $"您所需要填充的列为:'{colname}' \n 是否继续?";
+
+                if (MessageBox.Show(clickMessage, $"提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
+                {
+                    task.TaskId = 4;
+                    task.Value = Convert.ToString(gvdtl.Rows[gvdtl.CurrentCell.RowIndex].Cells[currentColumnIndex].Value);  //需要填充的值
+                    task.Fid = currentColumnIndex;  //需要填充的列ID
+                    task.Sourcedt = _generatedt;    //所有明细DT
+
+                    Start();
+
+                    if(!task.ResultMark) throw new Exception("填充出现问题,请联系管理员");
+                    else
+                    {
+                        MessageBox.Show($"已成功填充,请继续操作", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        //刷新GridView
+                        _generatedt = task.ResultTable;
+                        GridViewPageChange(2);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        ///子线程使用(重:用于监视功能调用情况,当完成时进行关闭LoadForm)
+        /// </summary>
+        private void Start()
+        {
+            task.StartTask();
+
+            //当完成后将Form2子窗体关闭
+            this.Invoke((ThreadStart)(() =>
+            {
+                load.Close();
+            }));
         }
 
         /// <summary>
@@ -113,9 +208,7 @@ namespace ArSendOutFrm
 
                 bnMoveNextItem.Enabled = true;
                 bnMoveLastItem.Enabled = true;
-                //刷新_dtl内的值,当发现行状态为'Modified'时,即将新增值插入
-                _dtl = Margedt((DataTable)gvdtl.DataSource,_generatedt,txtsale.Text);
-                GridViewPageChange();
+                GridViewPageChange(1);
             }
             catch (Exception ex)
             {
@@ -142,7 +235,7 @@ namespace ArSendOutFrm
                     bnMoveFirstItem.Enabled = false;
                     bnMovePreviousItem.Enabled = false;
                 }
-                GridViewPageChange();
+                GridViewPageChange(1);
             }
             catch (Exception ex)
             {
@@ -169,7 +262,7 @@ namespace ArSendOutFrm
                     bnMoveNextItem.Enabled = false;
                     bnMoveLastItem.Enabled = false;
                 }
-                GridViewPageChange();
+                GridViewPageChange(1);
             }
             catch (Exception ex)
             {
@@ -193,8 +286,7 @@ namespace ArSendOutFrm
 
                 bnMovePreviousItem.Enabled = true;
                 bnMoveFirstItem.Enabled = true;
-
-                GridViewPageChange();
+                GridViewPageChange(1);
             }
             catch (Exception ex)
             {
@@ -247,7 +339,8 @@ namespace ArSendOutFrm
                     bnMoveNextItem.Enabled = true;
                     bnMoveLastItem.Enabled = true;
                 }
-                GridViewPageChange();
+                if(gvdtl.RowCount>0 && _generatedt.Rows.Count>0)
+                    GridViewPageChange(1);
             }
             catch (Exception ex)
             {
@@ -268,7 +361,7 @@ namespace ArSendOutFrm
                 //每次选择新的“每页显示行数”，都要 1)将_pageChange标记设为true(即执行初始化方法) 2)将“当前页”初始化为1
                 _pageChange = true;
                 _pageCurrent = 1;
-                GridViewPageChange();
+                GridViewPageChange(1);
             }
             catch (Exception ex)
             {
@@ -279,12 +372,27 @@ namespace ArSendOutFrm
         /// <summary>
         /// GridView分页功能
         /// </summary>
-        private void GridViewPageChange()
+        /// <param name="id">0:初始化使用 1:转页或打印使用 2:填充列时使用</param>
+        private void GridViewPageChange(int id)
         {
             try
             {
+                //按实际情况整理DT
+                switch (id)
+                {
+                    case 0:
+                        _dtdtl = _dtl.Copy();
+                        break;
+                    case 1:
+                        _dtdtl = Margedt((DataTable)gvdtl.DataSource, _generatedt, txtsale.Text).Copy();
+                        break;
+                    case 2:
+                        _dtdtl = _generatedt.Copy();
+                        break;
+                }
+
                 //获取查询的总行数
-                var dtltotalrows = _dtl.Rows.Count;
+                var dtltotalrows = _dtdtl.Rows.Count;
                 //获取“每页显示行数”所选择的行数
                 var pageCount = Convert.ToInt32(tmshowrows.SelectedItem);
                 //计算出总页数
@@ -317,7 +425,7 @@ namespace ArSendOutFrm
                 }
 
                 //显示_dtl的查询总行数
-                tstotalrow.Text = $"共 {_dtl.Rows.Count} 行";
+                tstotalrow.Text = $"共 {_dtdtl.Rows.Count} 行";
 
                 //根据“当前页” 及 “固定行数” 计算出新的行数记录并进行赋值
                 //计算进行循环的起始行
@@ -325,11 +433,11 @@ namespace ArSendOutFrm
                 //计算进行循环的结束行
                 var endrow = _pageCurrent == _totalpagecount ? dtltotalrows : _pageCurrent * pageCount;
                 //复制 查询的DT的列信息（不包括行）至临时表内
-                var tempdt = _dtl.Clone();
+                var tempdt = _dtdtl.Clone();
                 //循环将所需的_dtl的行记录复制至临时表内
                 for (var i = startrow; i < endrow; i++)
                 {
-                    tempdt.ImportRow(_dtl.Rows[i]);
+                    tempdt.ImportRow(_dtdtl.Rows[i]);
                 }
 
                 //最后将刷新的DT重新赋值给GridView
@@ -384,9 +492,9 @@ namespace ArSendOutFrm
         {
 
             task.TaskId = 3;
-            task.Data = gvdt;
-
-            task.Value = value;
+            task.Data = gvdt;          //GridView当前行记录DT
+            task.Sourcedt = sourcedt;  //所有明细记录DT
+            task.Value = value;        //'需方'文件框值
             task.StartTask();
             return task.ResultTable;
         }
@@ -406,7 +514,7 @@ namespace ArSendOutFrm
                 //定义初始化标记
                 _pageChange = true;
                 //GridView分页
-                GridViewPageChange();
+                GridViewPageChange(0);
             }
             //注:当为空记录时,不显示跳转页;只需将临时表赋值至GridView内
             else

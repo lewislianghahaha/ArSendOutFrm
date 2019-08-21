@@ -15,6 +15,7 @@ namespace ArSendOutFrm.Logic
         private string _orderno;         //获取应收单据编号
         private int _fid;                //获取单据编号FID值
         private DataTable _dt;           //获取明细行记录
+        private DataTable _sourcedt;     //获取总行数记录
         private string _value;           //获取从文本框填写的值
 
         private DataTable _resultTable;  //返回DT类型
@@ -58,6 +59,11 @@ namespace ArSendOutFrm.Logic
             /// </summary>
             public string Value { set { _value = value; } }
 
+            /// <summary>
+            /// 获取总行数记录
+            /// </summary>
+            public DataTable Sourcedt { set { _sourcedt = value; } }
+
         #endregion
 
         #region Get
@@ -89,7 +95,11 @@ namespace ArSendOutFrm.Logic
                     break;
                 //运算-合并数据
                 case 3:
-                    Margedt(_dt,_value);
+                    Margedt(_dt,_sourcedt,_value);
+                    break;
+                //运算-填充DT
+                case 4:
+                    FillDt(_fid,_value,_sourcedt);
                     break;
             }
         }
@@ -122,11 +132,24 @@ namespace ArSendOutFrm.Logic
         /// <summary>
         /// 运算-合并数据
         /// </summary>
-        /// <param name="dt"></param>
-        /// <param name="value"></param>
-        private void Margedt(DataTable dt,string value)
+        /// <param name="dt">GridView当前行记录</param>
+        /// <param name="sourdt">所有行记录</param>
+        /// <param name="value">‘需方’文本框值</param>
+        private void Margedt(DataTable dt,DataTable sourdt,string value)
         {
-            _resultTable = generateDt.Margedt(dt,value);
+            _resultTable = generateDt.Margedt(dt,sourdt,value);
+        }
+
+        /// <summary>
+        /// 运算-填充DT
+        /// </summary>
+        /// <param name="columnid"></param>
+        /// <param name="value"></param>
+        /// <param name="sourcedt"></param>
+        private void FillDt(int columnid, string value, DataTable sourcedt)
+        {
+            _resultTable = generateDt.FillDt(columnid,value,sourcedt);
+            _resultMark = _resultTable.Rows.Count > 0;
         }
     }
 }
